@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://C:\Users\Nammi\Downloads\MyCycleWay-master (1)\MyCycleWay-master\MyCycleWay.iml" filepath="C:\Users\Nammi\Downloads\MyCycleWay-master (1)\MyCycleWay-master\MyCycleWay.iml" />
       <module fileurl="file://$PROJECT_DIR$/MyCycleWay-master.iml" filepath="$PROJECT_DIR$/MyCycleWay-master.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>

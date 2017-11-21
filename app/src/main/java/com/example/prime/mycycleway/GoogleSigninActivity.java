@@ -16,7 +16,7 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 
-public class GoogleSigninActivity extends AppCompatActivity {
+public class GoogleSigninActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener{
 
     private SignInButton login;
     private TextView name;
@@ -36,7 +36,7 @@ public class GoogleSigninActivity extends AppCompatActivity {
         name =(TextView) findViewById(R.id.name);
 
         login.setSize(SignInButton.SIZE_WIDE);
-        login.setScopes(signInOptions.getScopeArray());
+       // login.setScopes(signInOptions.getScopeArray());
 
         login.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +60,7 @@ public class GoogleSigninActivity extends AppCompatActivity {
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
 
     }
     public void openLocationActivity(View view){
