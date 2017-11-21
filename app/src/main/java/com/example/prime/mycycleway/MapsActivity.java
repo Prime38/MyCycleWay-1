@@ -7,6 +7,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -39,8 +40,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sust = new LatLng(-34, 151);
+        LatLng sust = new LatLng(24.9227523, 91.8269576);
+        CameraPosition target=CameraPosition.builder().target(sust).zoom(15).build();
         mMap.addMarker(new MarkerOptions().position(sust).title("Marker in SUST"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sust));
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(target));
     }
 }
