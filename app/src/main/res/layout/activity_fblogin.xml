@@ -1,21 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
     tools:context="com.example.prime.mycycleway.FBLoginActivity">
 
 
-    <Button
-        android:id="@+id/button4"
+
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/login_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="96dp"
-        android:text="Button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:onClick="openLocationActivity"/>
-</android.support.constraint.ConstraintLayout>
+        android:layout_centerInParent="true" />
+
+    <TextView
+        android:id="@+id/TV_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/login_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/TV_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/TV_id"
+        android:layout_alignLeft="@+id/TV_id"
+        android:layout_alignStart="@+id/TV_id"
+        android:layout_marginBottom="10dp" />
+
+    <TextView
+        android:id="@+id/TV_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/TV_email"
+        android:layout_alignLeft="@+id/TV_email"
+        android:layout_alignStart="@+id/TV_email"
+        android:layout_marginBottom="10dp" />
+
+</RelativeLayout>
+

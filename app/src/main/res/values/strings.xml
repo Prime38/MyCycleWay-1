@@ -12,5 +12,7 @@
     <string name="confirm_password">Confirm Password</string>
     <string name="todo">TODO</string>
     <string name="title_activity_maps">Map</string>
+    <string name="facebook_app_id">1549249921809499</string>
+    <string name="fb_login_protocol_scheme">fb1549249921809499</string>
 
 </resources>
