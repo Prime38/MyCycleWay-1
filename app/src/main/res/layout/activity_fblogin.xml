@@ -12,33 +12,8 @@
         android:id="@+id/login_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"/>
 
-    <TextView
-        android:id="@+id/TV_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/login_button"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="10dp" />
-
-    <TextView
-        android:id="@+id/TV_email"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/TV_id"
-        android:layout_alignLeft="@+id/TV_id"
-        android:layout_alignStart="@+id/TV_id"
-        android:layout_marginBottom="10dp" />
-
-    <TextView
-        android:id="@+id/TV_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/TV_email"
-        android:layout_alignLeft="@+id/TV_email"
-        android:layout_alignStart="@+id/TV_email"
-        android:layout_marginBottom="10dp" />
 
 </RelativeLayout>
 

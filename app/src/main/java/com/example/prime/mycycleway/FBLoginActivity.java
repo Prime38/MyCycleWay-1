@@ -25,7 +25,7 @@ import org.json.JSONObject;
 public class FBLoginActivity extends AppCompatActivity {
 
     LoginButton loginButton;
-    TextView textView;
+ //   TextView textView;
     CallbackManager callbackManager;
 
     @Override
@@ -39,17 +39,20 @@ public class FBLoginActivity extends AppCompatActivity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                String userid = loginResult.getAccessToken().getUserId();
+               // String userid = loginResult.getAccessToken().getUserId();
                 GraphRequest graphRequest = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        displayUserInfo(object);
+                        //displayUserInfo(object);
+
                     }
                 });
                 Bundle parameters = new Bundle();
                 parameters.putString("fields", "first_name, last_name, email,id");
                 graphRequest.setParameters(parameters);
                 graphRequest.executeAsync();
+                openLocationActivity();
+
             }
             @Override
             public void onCancel(){
@@ -63,8 +66,21 @@ public class FBLoginActivity extends AppCompatActivity {
         });
 
     }
-    // @SuppressLint("SetTextI18n")
-    public void displayUserInfo(JSONObject object){
+    @Override
+    protected void onActivityResult( final int requestCode,final int resultCode,final  Intent data) {
+        /*super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);*/
+        openLocationActivity();
+    }
+    public void openLocationActivity(){
+        Intent i=new Intent(this,MapsActivity.class);
+        startActivity(i);
+    }
+
+}
+
+// @SuppressLint("SetTextI18n")
+    /*public void displayUserInfo(JSONObject object){
         String first_name , last_name,email , id ;
         first_name = "";
         last_name = "";
@@ -86,18 +102,6 @@ public class FBLoginActivity extends AppCompatActivity {
         tv_name.setText(first_name+" "+last_name);
         tv_email.setText("Email : "+email);
         tv_id.setText("Id : "+id);
-    }
-
-    @Override
-    protected void onActivityResult( final int requestCode,final int resultCode,final  Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
-    public void openLocationActivity(View view){
-        Intent i=new Intent(this,MapsActivity.class);
-        startActivity(i);
-    }
-
-}
+    }*/
 
 

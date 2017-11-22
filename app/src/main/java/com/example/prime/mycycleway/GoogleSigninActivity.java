@@ -28,16 +28,12 @@ public class GoogleSigninActivity extends AppCompatActivity implements GoogleApi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_google_signin);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this,this).addApi(Auth.GOOGLE_SIGN_IN_API,signInOptions).build();
         login = (SignInButton) findViewById(R.id.login);
-        name =(TextView) findViewById(R.id.name);
-
+      //  name =(TextView) findViewById(R.id.name);
         login.setSize(SignInButton.SIZE_WIDE);
-       // login.setScopes(signInOptions.getScopeArray());
-
+      //  login.setScopes(signInOptions.getScopeArray());
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,10 +48,10 @@ public class GoogleSigninActivity extends AppCompatActivity implements GoogleApi
         if(requestCode == REQUEST_CODE){
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             GoogleSignInAccount account = result.getSignInAccount();
-
-            name.setText(account.getDisplayName());
+           // name.setText(account.getDisplayName());
 
         }
+        openLocationActivity();
     }
 
     @Override
@@ -63,7 +59,7 @@ public class GoogleSigninActivity extends AppCompatActivity implements GoogleApi
 
 
     }
-    public void openLocationActivity(View view){
+    public void openLocationActivity(){
         Intent i=new Intent(this,MapsActivity.class);
         startActivity(i);
     }
