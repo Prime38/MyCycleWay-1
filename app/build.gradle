@@ -24,6 +24,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:11.6.0'
     implementation 'com.facebook.android:facebook-login:4.28.0'
     implementation 'com.google.android.gms:play-services-auth:11.6.0'
+    implementation 'com.google.firebase:firebase-database:11.6.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
@@ -31,11 +32,11 @@ dependencies {
     apply plugin: 'com.google.gms.google-services'
 
 }
-configurations.all{
-    resolutionStrategy.eachDependency{ DependencyResolveDetails details ->
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
         def requested = details.requested
-        if(requested.group == 'com.android.support'){
-            if(!requested.name.startsWith("multidex")){
+        if (requested.group == 'com.android.support') {
+            if (!requested.name.startsWith("multidex")) {
                 details.useVersion '25.3.0'
             }
         }
