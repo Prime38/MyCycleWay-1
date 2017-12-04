@@ -45,9 +45,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         CameraPosition target=CameraPosition.builder().target(sust).zoom(15).build();
         mMap.addMarker(new MarkerOptions().position(sust).title("Marker in SUST"));
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(target));
-        openLocationActivity();
+        openFirebaseActivity();
     }
-    public void openLocationActivity(){
+    public void openFirebaseActivity(){
         Intent i=new Intent(this,FirebaseActivity.class);
         startActivity(i);
     }
