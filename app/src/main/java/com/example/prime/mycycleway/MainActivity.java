@@ -13,7 +13,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
     public void openSignInActivity(View view){
-        Intent i= new Intent(this,signinActivity.class);
+//        Intent i= new Intent(this,signinActivity.class);
+        Intent i= new Intent(this,MapsActivity.class);
         startActivity(i);
     }
 }
