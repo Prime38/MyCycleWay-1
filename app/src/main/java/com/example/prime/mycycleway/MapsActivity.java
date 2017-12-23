@@ -1,15 +1,17 @@
 package com.example.prime.mycycleway;
 
-
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -21,18 +23,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -48,6 +48,11 @@ import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONObject;
 
@@ -61,16 +66,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -99,17 +95,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String[] mLikelyPlaceAddresses;
     private String[] mLikelyPlaceAttributions;
     private LatLng[] mLikelyPlaceLatLngs;
-
+    static final MarkerOptions mo=new MarkerOptions();
     private ReadTask downloadTask = new ReadTask();
-
-
-
+    //acceleration
+    Button startButton;
+    private Sensor mySensor;
+    private SensorManager SM;
+    private double z,gravity;
+    TextView textView;
+    //firebase activities
+//    private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+//    private DatabaseReference mRootReference;
+//    private BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.ph);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //MarkerPoints = new ArrayList<>();
-
         if (savedInstanceState != null) {
             mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
@@ -126,9 +127,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        //acceleration
+        textView=(TextView)findViewById(R.id.textView);
+
+        startButton =(Button)findViewById(R.id.startbutton);
+        SM = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+        mySensor = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
+
+        startButton.setOnClickListener(
+               new View.OnClickListener()
+               {
+                    @Override
+                    public void onClick(View arg0)
+                    {
+                        String name = ((Button) arg0).getText().toString();
+                        if(name.equals("Start")){
+                            startButton.setText("Stop");
+                            onStartClick();
+                        }
+                        else if(name.equals("Stop")){
+                            startButton.setText("Start");
+                           onStopClick();
+                        }
+                    }
+                });
+        //firebase
+       // mRootReference = firebaseDatabase.getReference();
+//        mRootReference.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//                LatLng value= (LatLng) dataSnapshot.getValue();
+//                MarkerOptions pathhole=new MarkerOptions();
+//                pathhole.position(value).icon(ph);
+//                mMap.addMarker(pathhole);
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+
     }
-
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -162,14 +218,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
-
-
-//        float[] results = new float[1];
-//        Location.distanceBetween(latlang1.latitude, latlang1.longitude,
-//                latLng2.latitude, latLng2.longitude,
-//                results);
-
+        onStopClick();
     }
+
     protected void onSaveInstanceState(Bundle outState) {
         if (mMap != null) {
             outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
@@ -177,6 +228,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             super.onSaveInstanceState(outState);
         }
     }
+
     /**
      * Sets up the options menu.
      * @param menu The options menu.
@@ -187,6 +239,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getMenuInflater().inflate(R.menu.current_place_menu, menu);
         return true;
     }
+
     /**
      * Handles a click on the menu option to get a place.
      * @param item The menu item to handle.
@@ -199,6 +252,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return true;
     }
+
     private void getDeviceLocation() {
     /*
      * Get the best and most recent location of the device, which may be null in rare
@@ -228,6 +282,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
+
     private void getLocationPermission() {
     /*
      * Request location permission, so that we can get the location of the
@@ -244,6 +299,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
@@ -260,6 +316,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         updateLocationUI();
     }
+
     private void showCurrentPlace() {
         if (mMap == null) {
             return;
@@ -332,6 +389,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             getLocationPermission();
         }
     }
+
     private void openPlacesDialog() {
         // Ask the user to choose the place where they are now.
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
@@ -363,6 +421,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .setItems(mLikelyPlaceNames, listener)
                 .show();
     }
+
     private void updateLocationUI() {
         if (mMap == null) {
             return;
@@ -382,8 +441,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
-    static final MarkerOptions mo=new MarkerOptions();
     public void onSearchLocation(View v) throws IOException {
         if(v.getId()==R.id.button2){
             EditText tf_location=(EditText)findViewById(R.id.editText3);
@@ -405,46 +462,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
                     LatLng origin=mLastKnownLatlang;
                     String url = getMapsApiDirectionsUrl(origin,latLng);
-
                     // Start downloading json data from Google Directions API
                     downloadTask.execute(url);
-
-//        float[] results = new float[1];
-//        Location.distanceBetween(latlang1.latitude, latlang1.longitude,
-//                latLng2.latitude, latLng2.longitude,
-//                results);
-
                 }
             }
         }
     }
 
-
-
     //Get direction URL require to call Google Maps API
     private String  getMapsApiDirectionsUrl(LatLng origin,LatLng dest) {
         // Origin of route
         String str_origin = "origin="+origin.latitude+","+origin.longitude;
-
         // Destination of route
         String str_dest = "destination="+dest.latitude+","+dest.longitude;
-
-
         // Sensor enabled
         String sensor = "sensor=false";
-
         // Building the parameters to the web service
         String parameters = str_origin+"&"+str_dest+"&"+sensor;
-
         // Output format
         String output = "json";
-
         // Building the url to the web service
         String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
-
-
         return url;
-
     }
 
     //Do the URL call in background
@@ -473,6 +512,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
     }
+
     public class MapHttpConnection {
         @SuppressLint("LongLogTag")
         public String readUr(String mapsApiDirectionsUrl) throws IOException {
@@ -505,6 +545,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     }
+
     private class ParserTask extends AsyncTask<String,Integer, List<List<HashMap<String , String >>>> {
         @Override
         protected List<List<HashMap<String, String>>> doInBackground(
@@ -552,5 +593,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             mMap.addPolyline(polyLineOptions);
 
-        }}
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        z = event.values[2];
+        gravity=z/9.8;
+        if(gravity>1.4||gravity<0.7){
+            textView.setText(mLastKnownLatlang.latitude+","+mLastKnownLatlang.longitude);
+            //mRootReference.push().setValue(mLastKnownLatlang);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        //not in use
+    }
+
+    protected void onResume() {
+        super.onResume();
+        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SM.unregisterListener(this);
+    }
+
+    private void onStartClick(){
+        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    protected void onStopClick() {
+        SM.unregisterListener(this);
+    }
+
 }

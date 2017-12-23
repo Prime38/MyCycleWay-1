@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void openSignInActivity(View view){
 //        Intent i= new Intent(this,signinActivity.class);
-        Intent i= new Intent(this,MapsActivity.class);
+        Intent i= new Intent(this,FirebaseActivity.class);
         startActivity(i);
     }
 }
