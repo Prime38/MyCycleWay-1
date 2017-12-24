@@ -27,7 +27,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -67,7 +72,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener,PlaceSelectionListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -127,6 +132,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        //places searched
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment.setOnPlaceSelectedListener(this);
 
          //Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
@@ -449,39 +459,68 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
+
+
+//    public void onSearchLocation(View v) throws IOException {
+//        if(v.getId()==R.id.button2){
+//            if(!searchedLatlngList.isEmpty()){
+//                searchedLatlngList.clear();
+//                mMap.clear();
+//            }
+//            EditText tf_location=(EditText)findViewById(R.id.editText3);
+//            String searched_Location=tf_location.getText().toString();
+//            List<Address> addressList=null;
+//
+//            if(!searched_Location.equals("")){
+//                Geocoder geocoder=new Geocoder(this);
+//                try {
+//                    addressList=geocoder.getFromLocationName(searched_Location,10);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                for(int i=0;i<addressList.size();i++){
+//                    Address myAddress=addressList.get(i);
+//                    LatLng latLng=new LatLng(myAddress.getLatitude(),myAddress.getLongitude());
+//                    searchedLatlngList.add(latLng);
+//                    mo.position(latLng).title(searched_Location);
+//                    mMap.addMarker(mo);
+//                    mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+//                    LatLng origin=mLastKnownLatlang;
+//                    String url = getMapsApiDirectionsUrl(origin,latLng);
+//                    // Start downloading json data from Google Directions API
+//                    downloadTask.execute(url);
+//                }
+//            }
+//        }
+//    }
+
+    //places autocomplete search
     private ArrayList<LatLng> searchedLatlngList=new ArrayList<LatLng>();
-
-    public void onSearchLocation(View v) throws IOException {
-        if(v.getId()==R.id.button2){
-            if(!searchedLatlngList.isEmpty()){
-                searchedLatlngList.clear();
-                mMap.clear();
-            }
-            EditText tf_location=(EditText)findViewById(R.id.editText3);
-            String searched_Location=tf_location.getText().toString();
-            List<Address> addressList=null;
-
-            if(!searched_Location.equals("")){
-                Geocoder geocoder=new Geocoder(this);
-                try {
-                    addressList=geocoder.getFromLocationName(searched_Location,10);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                for(int i=0;i<addressList.size();i++){
-                    Address myAddress=addressList.get(i);
-                    LatLng latLng=new LatLng(myAddress.getLatitude(),myAddress.getLongitude());
-                    searchedLatlngList.add(latLng);
-                    mo.position(latLng).title(searched_Location);
-                    mMap.addMarker(mo);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-                    LatLng origin=mLastKnownLatlang;
-                    String url = getMapsApiDirectionsUrl(origin,latLng);
-                    // Start downloading json data from Google Directions API
-                    downloadTask.execute(url);
-                }
-            }
+    @Override
+    public void onPlaceSelected(Place place) {
+        if(!searchedLatlngList.isEmpty()){
+            searchedLatlngList.clear();
+            //mMap.clear();
+            //onCreate();
         }
+        Log.i(TAG, "Place Selected: " + place.getName());
+        LatLng result=place.getLatLng();
+        searchedLatlngList.add(result);
+        mMap.addMarker(new MarkerOptions().position(result).title("Marker in Sydney"));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(result, (float) 13.5));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(result));
+                    LatLng origin=mLastKnownLatlang;
+                    String url = getMapsApiDirectionsUrl(origin,result);
+//                    // Start downloading json data from Google Directions API
+                    downloadTask.execute(url);
+    }
+
+    @Override
+    public void onError(Status status) {
+        Log.e(TAG, "onError: Status = " + status.toString());
+
+        Toast.makeText(this, "Place selection failed: " + status.getStatusMessage(),
+                Toast.LENGTH_SHORT).show();
     }
 
     //Get direction URL require to call Google Maps API
