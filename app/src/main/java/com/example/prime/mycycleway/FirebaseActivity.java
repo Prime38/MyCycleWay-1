@@ -53,27 +53,12 @@ public class FirebaseActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 double lat=Double.parseDouble(nameField.getText().toString());
                 double lng=Double.parseDouble(emailField.getText().toString());
                 LatLng latLng=new LatLng(lat,lng);
                 mRootReference.push().setValue(latLng);
-//                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<Void> task) {
-//                        if(task.isSuccessful()){
-//                            Toast.makeText(FirebaseActivity.this,"Stored",Toast.LENGTH_LONG);
-//                        }
-//                        else {
-//                            Toast.makeText(FirebaseActivity.this,"Error",Toast.LENGTH_LONG);
-//                        }
-//
-//                    }
-//                })
-                ;
             }
         });
-
         mRootReference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -105,20 +90,20 @@ public class FirebaseActivity extends AppCompatActivity {
 
 
     }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mRootReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
+    //@Override
+//    protected void onStart() {
+//        super.onStart();
+//        mRootReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
 
 }

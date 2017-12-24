@@ -53,6 +53,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -79,7 +80,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // A default location (sust,sylhet, bangladesh) and default zoom to use when location permission is
     // not granted.
     private final LatLng mDefaultLocation = new LatLng(24.9227523, 91.8269576);
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 14;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
     // The geographical location where the device is currently located. That is, the last-known
@@ -102,33 +103,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Sensor mySensor;
     private SensorManager SM;
     private double z,gravity;
-    TextView textView;
+    //TextView textView;
     //firebase activities
-//    private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-//    private DatabaseReference mRootReference;
-//    private BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.ph);
+    private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    private DatabaseReference mRootReference;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
         if (savedInstanceState != null) {
             mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
-        setContentView(R.layout.activity_maps);
-        // Construct a GeoDataClient.
+
+         //Construct a GeoDataClient.
         mGeoDataClient = Places.getGeoDataClient(this, null);
         // Construct a PlaceDetectionClient.
         mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+         //Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
         //acceleration
-        textView=(TextView)findViewById(R.id.textView);
+        //textView=(TextView)findViewById(R.id.textView);
 
         startButton =(Button)findViewById(R.id.startbutton);
         SM = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
@@ -153,36 +156,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
         //firebase
-       // mRootReference = firebaseDatabase.getReference();
-//        mRootReference.addChildEventListener(new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//                LatLng value= (LatLng) dataSnapshot.getValue();
-//                MarkerOptions pathhole=new MarkerOptions();
-//                pathhole.position(value).icon(ph);
-//                mMap.addMarker(pathhole);
-//            }
-//
-//            @Override
-//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onChildRemoved(DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
+        mRootReference = firebaseDatabase.getReference().child("Location");
+        //mRootReference.removeValue();
+        mRootReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                LatLng newLocation = new LatLng(
+                        dataSnapshot.child("latitude").getValue(Double.class),
+                        dataSnapshot.child("longitude").getValue(Double.class)
+                );
+                double lat=dataSnapshot.child("latitude").getValue(Double.class);
+                double lng=dataSnapshot.child("longitude").getValue(Double.class);
+                //textView.setText(lat+","+lng);
+                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
+                mMap.addMarker(new MarkerOptions()
+                        .position(newLocation)
+                        .title(dataSnapshot.getKey()).icon(ph));
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
@@ -219,6 +227,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
         onStopClick();
+
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -252,7 +261,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return true;
     }
-
+//
     private void getDeviceLocation() {
     /*
      * Get the best and most recent location of the device, which may be null in rare
@@ -282,7 +291,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
-
+//
     private void getLocationPermission() {
     /*
      * Request location permission, so that we can get the location of the
@@ -300,7 +309,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
+//    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
@@ -316,7 +325,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         updateLocationUI();
     }
-
+//
     private void showCurrentPlace() {
         if (mMap == null) {
             return;
@@ -440,9 +449,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
+    private ArrayList<LatLng> searchedLatlngList=new ArrayList<LatLng>();
 
     public void onSearchLocation(View v) throws IOException {
         if(v.getId()==R.id.button2){
+            if(!searchedLatlngList.isEmpty()){
+                searchedLatlngList.clear();
+                mMap.clear();
+            }
             EditText tf_location=(EditText)findViewById(R.id.editText3);
             String searched_Location=tf_location.getText().toString();
             List<Address> addressList=null;
@@ -457,6 +471,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 for(int i=0;i<addressList.size();i++){
                     Address myAddress=addressList.get(i);
                     LatLng latLng=new LatLng(myAddress.getLatitude(),myAddress.getLongitude());
+                    searchedLatlngList.add(latLng);
                     mo.position(latLng).title(searched_Location);
                     mMap.addMarker(mo);
                     mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -485,8 +500,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
         return url;
     }
-
-    //Do the URL call in background
+//
+//    //Do the URL call in background
     private class ReadTask extends AsyncTask<String, Void , String> {
 
         @Override
@@ -512,7 +527,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
     }
-
+//
     public class MapHttpConnection {
         @SuppressLint("LongLogTag")
         public String readUr(String mapsApiDirectionsUrl) throws IOException {
@@ -592,6 +607,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             mMap.addPolyline(polyLineOptions);
+            points.clear();
 
         }
     }
@@ -600,34 +616,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onSensorChanged(SensorEvent event) {
         z = event.values[2];
         gravity=z/9.8;
-        if(gravity>1.4||gravity<0.7){
-            textView.setText(mLastKnownLatlang.latitude+","+mLastKnownLatlang.longitude);
-            //mRootReference.push().setValue(mLastKnownLatlang);
+        if(gravity>2||gravity<0.2){
+           // textView.setText(mLastKnownLatlang.latitude+","+mLastKnownLatlang.longitude);
+            mRootReference.push().setValue(mLastKnownLatlang);
         }
     }
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         //not in use
     }
-
     protected void onResume() {
         super.onResume();
         SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
     }
-
     @Override
     protected void onPause() {
         super.onPause();
         SM.unregisterListener(this);
     }
-
     private void onStartClick(){
         SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
     }
-
     protected void onStopClick() {
         SM.unregisterListener(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mRootReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value=dataSnapshot.getValue().toString();
+                //textView.setText(value);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
 }
