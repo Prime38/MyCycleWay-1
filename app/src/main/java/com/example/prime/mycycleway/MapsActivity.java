@@ -168,39 +168,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //firebase
         mRootReference = firebaseDatabase.getReference().child("Location");
         //mRootReference.removeValue();
-        mRootReference.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                LatLng newLocation = new LatLng(
-                        dataSnapshot.child("latitude").getValue(Double.class),
-                        dataSnapshot.child("longitude").getValue(Double.class)
-                );
-                double lat=dataSnapshot.child("latitude").getValue(Double.class);
-                double lng=dataSnapshot.child("longitude").getValue(Double.class);
-                //textView.setText(lat+","+lng);
-                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
-                mMap.addMarker(new MarkerOptions()
-                        .position(newLocation)
-                        .title(dataSnapshot.getKey()).icon(ph));
-            }
 
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
 
     }
 
@@ -509,10 +477,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(result).title("Marker in Sydney"));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(result, (float) 13.5));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(result));
-                    LatLng origin=mLastKnownLatlang;
-                    String url = getMapsApiDirectionsUrl(origin,result);
-//                    // Start downloading json data from Google Directions API
-                    downloadTask.execute(url);
+        LatLng origin=mLastKnownLatlang;
+        String url = getMapsApiDirectionsUrl(origin,result);
+//      Start downloading json data from Google Directions API
+        downloadTask.execute(url);
+        mRootReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                LatLng newLocation = new LatLng(
+                        dataSnapshot.child("latitude").getValue(Double.class),
+                        dataSnapshot.child("longitude").getValue(Double.class)
+                );
+                double lat=dataSnapshot.child("latitude").getValue(Double.class);
+                double lng=dataSnapshot.child("longitude").getValue(Double.class);
+                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
+                mMap.addMarker(new MarkerOptions()
+                        .position(newLocation)
+                        .title(dataSnapshot.getKey()).icon(ph));
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
