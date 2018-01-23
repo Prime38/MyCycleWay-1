@@ -72,7 +72,7 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener,PlaceSelectionListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private GoogleMap mMap;
+    protected static GoogleMap mMap;
     private CameraPosition mCameraPosition;
     // The entry points to the Places API.
     private GeoDataClient mGeoDataClient;
@@ -123,7 +123,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
-         //Construct a GeoDataClient.
+        //Construct a GeoDataClient.
         mGeoDataClient = Places.getGeoDataClient(this, null);
         // Construct a PlaceDetectionClient.
         mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
@@ -135,7 +135,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
 
-         //Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        //Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
         //acceleration
         //textView=(TextView)findViewById(R.id.textView);
@@ -146,8 +146,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_NORMAL);
 
         startButton.setOnClickListener(
-               new View.OnClickListener()
-               {
+                new View.OnClickListener()
+                {
                     @Override
                     public void onClick(View arg0)
                     {
@@ -158,7 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                         else if(name.equals("Stop")){
                             startButton.setText("Start");
-                           onStopClick();
+                            onStopClick();
                         }
                     }
                 });
@@ -236,7 +236,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return true;
     }
-//
+    //
     private void getDeviceLocation() {
     /*
      * Get the best and most recent location of the device, which may be null in rare
@@ -266,7 +266,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
-//
+    //
     private void getLocationPermission() {
     /*
      * Request location permission, so that we can get the location of the
@@ -284,7 +284,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-//    @Override
+    //    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
@@ -300,7 +300,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         updateLocationUI();
     }
-//
+    //
     private void showCurrentPlace() {
         if (mMap == null) {
             return;
@@ -346,7 +346,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         break;
                                     }
                                 }
-
                                 // Release the place likelihood buffer, to avoid memory leaks.
                                 likelyPlaces.release();
 
@@ -425,40 +424,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
-//    public void onSearchLocation(View v) throws IOException {
-//        if(v.getId()==R.id.button2){
-//            if(!searchedLatlngList.isEmpty()){
-//                searchedLatlngList.clear();
-//                mMap.clear();
-//            }
-//            EditText tf_location=(EditText)findViewById(R.id.editText3);
-//            String searched_Location=tf_location.getText().toString();
-//            List<Address> addressList=null;
-//
-//            if(!searched_Location.equals("")){
-//                Geocoder geocoder=new Geocoder(this);
-//                try {
-//                    addressList=geocoder.getFromLocationName(searched_Location,10);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                for(int i=0;i<addressList.size();i++){
-//                    Address myAddress=addressList.get(i);
-//                    LatLng latLng=new LatLng(myAddress.getLatitude(),myAddress.getLongitude());
-//                    searchedLatlngList.add(latLng);
-//                    mo.position(latLng).title(searched_Location);
-//                    mMap.addMarker(mo);
-//                    mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
-//                    LatLng origin=mLastKnownLatlang;
-//                    String url = getMapsApiDirectionsUrl(origin,latLng);
-//                    // Start downloading json data from Google Directions API
-//                    downloadTask.execute(url);
-//                }
-//            }
-//        }
-//    }
-
     //places autocomplete search
     private ArrayList<LatLng> searchedLatlngList=new ArrayList<LatLng>();
     @Override
@@ -534,125 +499,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
         return url;
     }
-//
-//    //Do the URL call in background
-    private class ReadTask extends AsyncTask<String, Void , String> {
-
-        @Override
-        protected String doInBackground(String... url) {
-            // TODO Auto-generated method stub
-            String data = "";
-            try {
-                MapHttpConnection http = new MapHttpConnection();
-                data = http.readUr(url[0]);
-
-
-            } catch (Exception e) {
-                // TODO: handle exception
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            new ParserTask().execute(result);
-        }
-
-    }
-//
-    public class MapHttpConnection {
-        @SuppressLint("LongLogTag")
-        public String readUr(String mapsApiDirectionsUrl) throws IOException {
-            String data = "";
-            InputStream istream = null;
-            HttpURLConnection urlConnection = null;
-            try {
-                URL url = new URL(mapsApiDirectionsUrl);
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.connect();
-                istream = urlConnection.getInputStream();
-                BufferedReader br = new BufferedReader(new InputStreamReader(istream));
-                StringBuffer sb = new StringBuffer();
-                String line ="";
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                data = sb.toString();
-                br.close();
-
-
-            }
-            catch (Exception e) {
-                Log.d("Exception while reading url", e.toString());
-            } finally {
-                istream.close();
-                urlConnection.disconnect();
-            }
-            return data;
-
-        }
-    }
-
-    private class ParserTask extends AsyncTask<String,Integer, List<List<HashMap<String , String >>>> {
-        @Override
-        protected List<List<HashMap<String, String>>> doInBackground(
-                String... jsonData) {
-            // TODO Auto-generated method stub
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                PathJSONParser parser = new PathJSONParser();
-                routes = parser.parse(jObject);
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
-            ArrayList<LatLng> points = null;
-            PolylineOptions polyLineOptions = null;
-
-            // traversing through routes
-            for (int i = 0; i < routes.size(); i++) {
-                points = new ArrayList<LatLng>();
-                polyLineOptions = new PolylineOptions();
-                List<HashMap<String, String>> path = routes.get(i);
-
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String, String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-                polyLineOptions.addAll(points);
-                polyLineOptions.width(4);
-                polyLineOptions.color(Color.BLUE);
-            }
-
-            mMap.addPolyline(polyLineOptions);
-            points.clear();
-
-        }
-    }
-
     //sensor
     @Override
     public void onSensorChanged(SensorEvent event) {
         z = event.values[2];
         gravity=z/9.8;
         if(gravity>2||gravity<0.2){
-           // textView.setText(mLastKnownLatlang.latitude+","+mLastKnownLatlang.longitude);
+            // textView.setText(mLastKnownLatlang.latitude+","+mLastKnownLatlang.longitude);
             mRootReference.push().setValue(mLastKnownLatlang);
         }
     }
