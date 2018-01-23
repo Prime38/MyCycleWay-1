@@ -28,7 +28,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -59,9 +58,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -468,19 +465,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onPlaceSelected(Place place) {
         if(!searchedLatlngList.isEmpty()){
             searchedLatlngList.clear();
-            //mMap.clear();
-            //onCreate();
         }
         Log.i(TAG, "Place Selected: " + place.getName());
         LatLng result=place.getLatLng();
         searchedLatlngList.add(result);
         mMap.addMarker(new MarkerOptions().position(result).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(result, (float) 13.5));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(result));
         LatLng origin=mLastKnownLatlang;
         String url = getMapsApiDirectionsUrl(origin,result);
 //      Start downloading json data from Google Directions API
         downloadTask.execute(url);
+        //firebase
         mRootReference.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -651,6 +646,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //sensor
     @Override
     public void onSensorChanged(SensorEvent event) {
         z = event.values[2];
@@ -680,6 +676,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SM.unregisterListener(this);
     }
 
+    //firebase
     @Override
     protected void onStart() {
         super.onStart();
