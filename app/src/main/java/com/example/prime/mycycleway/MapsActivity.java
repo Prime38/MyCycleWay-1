@@ -105,10 +105,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Sensor mySensor;
     private SensorManager SM;
     private double z,gravity;
-    //TextView textView;
     //firebase activities
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mRootReference;
+    ArrayList<LatLng> markers;
 
 
     @Override
@@ -129,6 +129,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        markers=new ArrayList<>();
 
         //places searched
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
@@ -202,6 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
         onStopClick();
+        markers.add(mLastKnownLatlang);
 
     }
 
@@ -257,7 +259,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             Log.d(TAG, "Current location is null. Using defaults.");
                             Log.e(TAG, "Exception: %s", task.getException());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                            mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                            mMap.getUiSettings().setMyLocationButtonEnabled(true);
                         }
                     }
                 });
@@ -414,7 +416,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled(true);
                 mMap.getUiSettings().setMyLocationButtonEnabled(true);
             } else {
-                mMap.setMyLocationEnabled(false);
+                mMap.setMyLocationEnabled(true);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mLastKnownLocation = null;
                 getLocationPermission();
@@ -423,22 +425,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
-
     //places autocomplete search
-    private ArrayList<LatLng> searchedLatlngList=new ArrayList<LatLng>();
     @Override
     public void onPlaceSelected(Place place) {
-        if(!searchedLatlngList.isEmpty()){
-            searchedLatlngList.clear();
+        if (markers.size() > 1) {
+            markers.clear();
+            markers.add(mLastKnownLatlang);
+            mMap.clear();
         }
+
         Log.i(TAG, "Place Selected: " + place.getName());
         LatLng result=place.getLatLng();
-        searchedLatlngList.add(result);
+        markers.add(result);
         mMap.addMarker(new MarkerOptions().position(result).title("Marker in Sydney"));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(result));
         LatLng origin=mLastKnownLatlang;
         String url = getMapsApiDirectionsUrl(origin,result);
 //      Start downloading json data from Google Directions API
+        ReadTask downloadTask = new ReadTask();
         downloadTask.execute(url);
         //firebase
         mRootReference.addChildEventListener(new ChildEventListener() {
@@ -482,7 +486,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "Place selection failed: " + status.getStatusMessage(),
                 Toast.LENGTH_SHORT).show();
     }
-
     //Get direction URL require to call Google Maps API
     private String  getMapsApiDirectionsUrl(LatLng origin,LatLng dest) {
         // Origin of route
@@ -527,8 +530,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
     protected void onStopClick() {
         SM.unregisterListener(this);
-    }
 
+    }
     //firebase
     @Override
     protected void onStart() {

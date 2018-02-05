@@ -18,15 +18,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        OneSecondthread oneSecondthread=new OneSecondthread((long) 1);
+
 
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
             //Toast.makeText(this, "GPS is Enabled in your devide", Toast.LENGTH_SHORT).show();
         }else{
             showGPSDisabledAlertToUser();
         }
-
-
     }
     public void openSignInActivity(View view){
 //        Intent i= new Intent(this,signinActivity.class);
