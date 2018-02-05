@@ -24,5 +24,7 @@
     <string name="longitude">Longitude</string>
     <string name="tv_lat">tv_lat</string>
     <string name="tv_lng">tv_lng</string>
+    <string name="start">Start</string>
+    <string name="points">Points</string>
 
 </resources>

@@ -13,6 +13,8 @@ import java.util.List;
  * Created by Nammi on 1/23/2018.
  */
 public class ParserTask extends AsyncTask<String,Integer, List<List<HashMap<String , String >>>> {
+
+    public ArrayList<LatLng> points ;
     @Override
     protected List<List<HashMap<String, String>>> doInBackground(
             String... jsonData) {
@@ -33,7 +35,7 @@ public class ParserTask extends AsyncTask<String,Integer, List<List<HashMap<Stri
 
     @Override
     protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
-        ArrayList<LatLng> points = null;
+
         PolylineOptions polyLineOptions = null;
 
         // traversing through routes
@@ -55,10 +57,14 @@ public class ParserTask extends AsyncTask<String,Integer, List<List<HashMap<Stri
             polyLineOptions.addAll(points);
             polyLineOptions.width(4);
             polyLineOptions.color(Color.BLUE);
+
         }
 
         MapsActivity.mMap.addPolyline(polyLineOptions);
         points.clear();
 
+    }
+    ArrayList<LatLng> getAllPoints(){
+        return points;
     }
 }

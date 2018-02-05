@@ -49,6 +49,7 @@ import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
+import com.google.maps.android.PolyUtil;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -99,7 +100,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String[] mLikelyPlaceAttributions;
     private LatLng[] mLikelyPlaceLatLngs;
     static final MarkerOptions mo=new MarkerOptions();
-    private ReadTask downloadTask = new ReadTask();
+    private ReadTask downloadTask;
     //acceleration
     Button startButton;
     private Sensor mySensor;
@@ -109,6 +110,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mRootReference;
     ArrayList<LatLng> markers;
+    TextView t;
 
 
     @Override
@@ -130,6 +132,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         markers=new ArrayList<>();
+        t=(TextView) findViewById(R.id.points);
+
 
         //places searched
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
@@ -433,50 +437,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             markers.add(mLastKnownLatlang);
             mMap.clear();
         }
-
         Log.i(TAG, "Place Selected: " + place.getName());
         LatLng result=place.getLatLng();
         markers.add(result);
         mMap.addMarker(new MarkerOptions().position(result).title("Marker in Sydney"));
         mMap.animateCamera(CameraUpdateFactory.newLatLng(result));
-        LatLng origin=mLastKnownLatlang;
-        String url = getMapsApiDirectionsUrl(origin,result);
-//      Start downloading json data from Google Directions API
-        ReadTask downloadTask = new ReadTask();
-        downloadTask.execute(url);
-        //firebase
-        mRootReference.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                LatLng newLocation = new LatLng(
-                        dataSnapshot.child("latitude").getValue(Double.class),
-                        dataSnapshot.child("longitude").getValue(Double.class)
-                );
-                double lat=dataSnapshot.child("latitude").getValue(Double.class);
-                double lng=dataSnapshot.child("longitude").getValue(Double.class);
-                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
-                mMap.addMarker(new MarkerOptions()
-                        .position(newLocation)
-                        .title(dataSnapshot.getKey()).icon(ph));
-            }
+        findRoute(mLastKnownLatlang,result);
 
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
 
     @Override
@@ -549,6 +516,62 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+    }
+    //find the route to the destination
+    public void findRoute(LatLng origin,LatLng dest){
+        String url = getMapsApiDirectionsUrl(origin,dest);
+//      Start downloading json data from Google Directions API
+        downloadTask = new ReadTask();
+        downloadTask.execute(url);
+        loadPathHoles();
+        if(PolyUtil.isLocationOnPath(mLastKnownLatlang,getPointsOnRoute(downloadTask),false)){
+            t.setText("awesome");
+        }
+
+    }
+
+    //load the firebase pathHole data
+    public  void loadPathHoles(){
+        //firebase
+        mRootReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                LatLng newLocation = new LatLng(
+                        dataSnapshot.child("latitude").getValue(Double.class),
+                        dataSnapshot.child("longitude").getValue(Double.class)
+                );
+                double lat=dataSnapshot.child("latitude").getValue(Double.class);
+                double lng=dataSnapshot.child("longitude").getValue(Double.class);
+
+                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
+                mMap.addMarker(new MarkerOptions()
+                        .position(newLocation)
+                        .title(dataSnapshot.getKey()).icon(ph));
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+    ArrayList<LatLng> getPointsOnRoute(ReadTask readTask){
+        ArrayList<LatLng> routePoints=readTask.getRoutepoints();
+        return routePoints;
+
     }
 
 }
