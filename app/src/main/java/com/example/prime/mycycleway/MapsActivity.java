@@ -2,10 +2,13 @@ package com.example.prime.mycycleway;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.graphics.Color;
@@ -72,7 +75,8 @@ import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener,PlaceSelectionListener {
 
-    private static final String TAG = MapsActivity.class.getSimpleName();
+    public static final String TAG = MapsActivity.class.getSimpleName();
+
     protected static GoogleMap mMap;
     private CameraPosition mCameraPosition;
     // The entry points to the Places API.
@@ -88,8 +92,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static boolean mLocationPermissionGranted;
     // The geographical location where the device is currently located. That is, the last-known
     // location retrieved by the Fused Location Provider.
-    private Location mLastKnownLocation;
-    private LatLng mLastKnownLatlang;
+    public static Location mLastKnownLocation;
+    public static LatLng mLastKnownLatlang;
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
@@ -109,8 +113,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //firebase activities
     private FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     private DatabaseReference mRootReference;
-    ArrayList<LatLng> markers;
-    TextView t;
+    static ArrayList<LatLng> markers;
+    public  MediaPlayer mp;
+    ArrayList<LatLng> pHLatlng=new ArrayList<LatLng>();
+
+//    Button advanceSearch;
+//    Button directionTo;
+//    Button locationOf;
+//    Button dragPointTo;
+//    Button dragPointFrom;
+    //Button searchButton;
+    TextView timerTextView;
+    long startTime = 0;
+    //runs without a timer by reposting this handler at the end of the runnable
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long millis = System.currentTimeMillis() - startTime;
+            int seconds = (int) (millis / 1000);
+            int minutes = seconds / 60;
+            seconds = seconds % 60;
+            //timerTextView.setText(String.format("%d:%02d", minutes, seconds));
+            getDeviceLocation();
+            timerHandler.postDelayed(this, 2000);
+        }
+    };
 
 
     @Override
@@ -125,6 +153,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
+//        locationOf=(Button)findViewById(R.id.locationIcon);
+//        dragPointTo=(Button)findViewById(R.id.todrag);
+//        dragPointFrom=(Button)findViewById(R.id.fromdrag);
+        mp=MediaPlayer.create(this,R.raw.alarm);
+        timerTextView=(TextView)findViewById(R.id.textView);
+
+//        advanceSearch=(Button)findViewById(R.id.advanceSearch);
+//
+//        locationOf.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                updateLocationUI();
+//                // Get the current location of the device and set the position of the map.
+//                getDeviceLocation();
+//
+//            }
+//        });
+//        dragPointTo.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//            }
+//        });
+//        dragPointFrom.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//            }
+//        });
+
         //Construct a GeoDataClient.
         mGeoDataClient = Places.getGeoDataClient(this, null);
         // Construct a PlaceDetectionClient.
@@ -132,8 +190,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         markers=new ArrayList<>();
-        t=(TextView) findViewById(R.id.points);
-
+//        searchButton=(Button) findViewById(R.id.advanceSearch);
+//        searchButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                advanceSearchClick(searchButton);
+//            }
+//        });
 
         //places searched
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
@@ -208,104 +271,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getDeviceLocation();
         onStopClick();
         markers.add(mLastKnownLatlang);
+        startTime = System.currentTimeMillis();
+        timerHandler.postDelayed(timerRunnable, 0);
 
     }
 
-    protected void onSaveInstanceState(Bundle outState) {
-        if (mMap != null) {
-            outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
-            outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
-            super.onSaveInstanceState(outState);
-        }
-    }
-
-    /**
-     * Sets up the options menu.
-     * @param menu The options menu.
-     * @return Boolean.
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.current_place_menu, menu);
-        return true;
-    }
-
-    /**
-     * Handles a click on the menu option to get a place.
-     * @param item The menu item to handle.
-     * @return Boolean.
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.option_get_place) {
-            showCurrentPlace();
-        }
-        return true;
-    }
-    //
-    private void getDeviceLocation() {
-    /*
-     * Get the best and most recent location of the device, which may be null in rare
-     * cases when a location is not available.
-     */
-        try {
-            if (mLocationPermissionGranted) {
-                Task locationResult = mFusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
-                    @Override
-                    public void onComplete(@NonNull Task task) {
-                        if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
-                            mLastKnownLocation = (Location) task.getResult();
-                            mLastKnownLatlang=new LatLng(mLastKnownLocation.getLatitude(),mLastKnownLocation.getLongitude());
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastKnownLatlang,DEFAULT_ZOOM));
-                        } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
-                            mMap.getUiSettings().setMyLocationButtonEnabled(true);
-                        }
-                    }
-                });
-            }
-        } catch(SecurityException e)  {
-            Log.e("Exception: %s", e.getMessage());
-        }
-    }
-    //
-    public void getLocationPermission() {
-    /*
-     * Request location permission, so that we can get the location of the
-     * device. The result of the permission request is handled by a callback,
-     * onRequestPermissionsResult.
-     */
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            mLocationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-        }
-    }
-
-    //    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
-                                           @NonNull int[] grantResults) {
-        mLocationPermissionGranted = false;
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mLocationPermissionGranted = true;
-                }
-            }
-        }
-        updateLocationUI();
-    }
     //
     private void showCurrentPlace() {
         if (mMap == null) {
@@ -410,7 +380,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .setItems(mLikelyPlaceNames, listener)
                 .show();
     }
-
     private void updateLocationUI() {
         if (mMap == null) {
             return;
@@ -429,6 +398,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e("Exception: %s", e.getMessage());
         }
     }
+
     //places autocomplete search
     @Override
     public void onPlaceSelected(Place place) {
@@ -446,6 +416,273 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    //find the route to the destination
+    public  void findRoute(LatLng origin, LatLng dest){
+        String url = getMapsApiDirectionsUrl(origin,dest);
+//      Start downloading json data from Google Directions API
+        downloadTask = new ReadTask();
+        downloadTask.execute(url);
+        loadPathHoles();
+//
+
+    }
+    //load the firebase pathHole data
+    public  void loadPathHoles(){
+        //firebase
+        mRootReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                LatLng newLocation = new LatLng(
+                        dataSnapshot.child("latitude").getValue(Double.class),
+                        dataSnapshot.child("longitude").getValue(Double.class)
+                );
+                double lat=dataSnapshot.child("latitude").getValue(Double.class);
+                double lng=dataSnapshot.child("longitude").getValue(Double.class);
+                pHLatlng.add(newLocation);
+
+                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
+                mMap.addMarker(new MarkerOptions()
+                        .position(newLocation)
+                        .title(dataSnapshot.getKey()).icon(ph));
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+//        if(PolyUtil.isLocationOnPath(mLastKnownLatlang,getPointsOnRoute(downloadTask),false)){
+//
+//        }
+
+    }
+    ArrayList<LatLng> getPointsOnRoute(ReadTask readTask){
+        ArrayList<LatLng> routePoints=readTask.getRoutepoints();
+        return routePoints;
+
+    }
+    class ReadTask extends AsyncTask<String, Void , String> {
+
+        public ArrayList<LatLng> allpoints;
+        class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
+            public ArrayList<LatLng> points;
+            @Override
+            protected List<List<HashMap<String, String>>> doInBackground(
+                    String... jsonData) {
+                // TODO Auto-generated method stub
+                JSONObject jObject;
+                List<List<HashMap<String, String>>> routes = null;
+                try {
+                    jObject = new JSONObject(jsonData[0]);
+                    PathJSONParser parser = new PathJSONParser();
+                    routes = parser.parse(jObject);
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return routes;
+            }
+
+            @Override
+            protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
+
+                PolylineOptions polyLineOptions = null;
+
+                // traversing through routes
+                for (int i = 0; i < routes.size(); i++) {
+                    points = new ArrayList<LatLng>();
+                    polyLineOptions = new PolylineOptions();
+                    List<HashMap<String, String>> path = routes.get(i);
+
+                    for (int j = 0; j < path.size(); j++) {
+                        HashMap<String, String> point = path.get(j);
+
+                        double lat = Double.parseDouble(point.get("lat"));
+                        double lng = Double.parseDouble(point.get("lng"));
+                        LatLng position = new LatLng(lat, lng);
+
+                        points.add(position);
+                    }
+
+                    polyLineOptions.addAll(points);
+                    polyLineOptions.width(4);
+                    polyLineOptions.color(Color.BLUE);
+
+                }
+
+                MapsActivity.mMap.addPolyline(polyLineOptions);
+                points.clear();
+
+            }
+
+            ArrayList<LatLng> getAllPoints() {
+                return points;
+            }
+
+        }
+
+        ParserTask pTask;
+
+        @Override
+        protected String doInBackground(String... url) {
+            // TODO Auto-generated method stub
+            String data = "";
+            try {
+                MapHttpConnection http = new MapHttpConnection();
+                data = http.readUr(url[0]);
+
+
+            } catch (Exception e) {
+                // TODO: handle exception
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            pTask = new ParserTask();
+            pTask.execute(result);
+        }
+
+        public ArrayList<LatLng> getRoutepoints() {
+
+            return downloadTask.pTask.getAllPoints();
+        }
+
+    }
+
+    public float dist(LatLng start,LatLng end){
+        Location startLoc=new Location("start location");
+        Location endLoc=new Location("end location");
+
+        startLoc.setLatitude(start.latitude);
+        endLoc.setLatitude(end.latitude);
+        startLoc.setLongitude(start.longitude);
+        endLoc.setLongitude(end.longitude);
+        float dist=startLoc.distanceTo(endLoc);
+        return dist;
+    }
+
+    public void alarm(LatLng pHole){
+        if(dist(mLastKnownLatlang,pHole)<=5){
+            mp.start();
+        }
+        else{
+            if(mp.isPlaying())mp.release();
+        }
+    }
+    protected void onSaveInstanceState(Bundle outState) {
+        if (mMap != null) {
+            outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
+            outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
+            super.onSaveInstanceState(outState);
+        }
+    }
+
+    /**
+     * Sets up the options menu.
+     * @param menu The options menu.
+     * @return Boolean.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.current_place_menu, menu);
+        return true;
+    }
+
+    /**
+     * Handles a click on the menu option to get a place.
+     * @param item The menu item to handle.
+     * @return Boolean.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.option_get_place) {
+            showCurrentPlace();
+        }
+        return true;
+    }
+
+    //
+    private void getDeviceLocation() {
+    /*
+     * Get the best and most recent location of the device, which may be null in rare
+     * cases when a location is not available.
+     */
+        try {
+            if (mLocationPermissionGranted) {
+                Task locationResult = mFusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful()) {
+                            // Set the map's camera position to the current location of the device.
+                            mLastKnownLocation = (Location) task.getResult();
+                            //checkCurrentLocationIfPHisAhead();
+                            mLastKnownLatlang=new LatLng(mLastKnownLocation.getLatitude(),mLastKnownLocation.getLongitude());
+                            timerTextView.setText(mLastKnownLatlang.toString());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastKnownLatlang,DEFAULT_ZOOM));
+                        } else {
+                            Log.d(TAG, "Current location is null. Using defaults.");
+                            Log.e(TAG, "Exception: %s", task.getException());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+                            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                        }
+                    }
+                });
+            }
+        } catch(SecurityException e)  {
+            Log.e("Exception: %s", e.getMessage());
+        }
+    }
+
+    //
+    public void getLocationPermission() {
+    /*
+     * Request location permission, so that we can get the location of the
+     * device. The result of the permission request is handled by a callback,
+     * onRequestPermissionsResult.
+     */
+        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mLocationPermissionGranted = true;
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
+    //    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
+        mLocationPermissionGranted = false;
+        switch (requestCode) {
+            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    mLocationPermissionGranted = true;
+                }
+            }
+        }
+        updateLocationUI();
+    }
     @Override
     public void onError(Status status) {
         Log.e(TAG, "onError: Status = " + status.toString());
@@ -469,6 +706,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
         return url;
     }
+
     //sensor
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -517,61 +755,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
-    //find the route to the destination
-    public void findRoute(LatLng origin,LatLng dest){
-        String url = getMapsApiDirectionsUrl(origin,dest);
-//      Start downloading json data from Google Directions API
-        downloadTask = new ReadTask();
-        downloadTask.execute(url);
-        loadPathHoles();
-        if(PolyUtil.isLocationOnPath(mLastKnownLatlang,getPointsOnRoute(downloadTask),false)){
-            t.setText("awesome");
+//     public  void advanceSearchClick(View view){
+//         Intent i=new Intent(this,SearchActivity.class);
+//         startActivity(i);
+//     }
+    public boolean checkCurrentLocationIfPHisAhead(){
+        for(int i=0;i<pHLatlng.size()-1;i++){
+
         }
-
+        return true;
     }
-
-    //load the firebase pathHole data
-    public  void loadPathHoles(){
-        //firebase
-        mRootReference.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                LatLng newLocation = new LatLng(
-                        dataSnapshot.child("latitude").getValue(Double.class),
-                        dataSnapshot.child("longitude").getValue(Double.class)
-                );
-                double lat=dataSnapshot.child("latitude").getValue(Double.class);
-                double lng=dataSnapshot.child("longitude").getValue(Double.class);
-
-                BitmapDescriptor ph= BitmapDescriptorFactory.fromResource(R.drawable.phii);
-                mMap.addMarker(new MarkerOptions()
-                        .position(newLocation)
-                        .title(dataSnapshot.getKey()).icon(ph));
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-    }
-    ArrayList<LatLng> getPointsOnRoute(ReadTask readTask){
-        ArrayList<LatLng> routePoints=readTask.getRoutepoints();
-        return routePoints;
-
-    }
+//    @Override
+////    public void onPause() {
+////        super.onPause();
+////        timerHandler.removeCallbacks(timerRunnable);
+////    }
 
 }

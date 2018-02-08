@@ -32,7 +32,7 @@ public class FBLoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // FacebookSdk.sdkInitialize();
-        setContentView(R.layout.activity_fblogin);
+        setContentView(R.layout.activity_main);
         loginButton = (LoginButton)findViewById(R.id.login_button);
         loginButton.setReadPermissions("email","public_profile");
         callbackManager = CallbackManager.Factory.create();

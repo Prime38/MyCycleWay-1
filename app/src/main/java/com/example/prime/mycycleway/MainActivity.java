@@ -52,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
     }
+    public void openEmailLogin(View view){
+        Intent i=new Intent(this,EmailLoginActivity.class);
+        startActivity(i);
+    }
 
 
 }

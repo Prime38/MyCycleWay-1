@@ -20,8 +20,8 @@ public class signinActivity extends AppCompatActivity {
         Intent i=new Intent(this,GoogleSigninActivity.class);
         startActivity(i);
     }
-    public void openEmailLogin(View view){
-        Intent i=new Intent(this,EmailLoginActivity.class);
-        startActivity(i);
-    }
+//    public void openEmailLogin(View view){
+//        Intent i=new Intent(this,EmailLoginActivity.class);
+//        startActivity(i);
+//    }
 }

@@ -26,5 +26,7 @@
     <string name="tv_lng">tv_lng</string>
     <string name="start">Start</string>
     <string name="points">Points</string>
+    <string name="to">TO</string>
+    <string name="button">Button</string>
 
 </resources>
