@@ -76,7 +76,6 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,SensorEventListener,PlaceSelectionListener {
 
     public static final String TAG = MapsActivity.class.getSimpleName();
-
     protected static GoogleMap mMap;
     private CameraPosition mCameraPosition;
     // The entry points to the Places API.
@@ -117,12 +116,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public  MediaPlayer mp;
     ArrayList<LatLng> pHLatlng=new ArrayList<LatLng>();
 
-//    Button advanceSearch;
-//    Button directionTo;
-//    Button locationOf;
-//    Button dragPointTo;
-//    Button dragPointFrom;
-    //Button searchButton;
     TextView timerTextView;
     long startTime = 0;
     //runs without a timer by reposting this handler at the end of the runnable
@@ -134,8 +127,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             int seconds = (int) (millis / 1000);
             int minutes = seconds / 60;
             seconds = seconds % 60;
-            //timerTextView.setText(String.format("%d:%02d", minutes, seconds));
             getDeviceLocation();
+            if(holeIsClose()){
+//                if (mp.isPlaying()){
+//                    mp.release();
+//                }
+                alarm();
+            }
             timerHandler.postDelayed(this, 2000);
         }
     };
@@ -153,35 +151,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
-//        locationOf=(Button)findViewById(R.id.locationIcon);
-//        dragPointTo=(Button)findViewById(R.id.todrag);
-//        dragPointFrom=(Button)findViewById(R.id.fromdrag);
         mp=MediaPlayer.create(this,R.raw.alarm);
         timerTextView=(TextView)findViewById(R.id.textView);
-
-//        advanceSearch=(Button)findViewById(R.id.advanceSearch);
-//
-//        locationOf.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                updateLocationUI();
-//                // Get the current location of the device and set the position of the map.
-//                getDeviceLocation();
-//
-//            }
-//        });
-//        dragPointTo.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
-//        dragPointFrom.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
 
         //Construct a GeoDataClient.
         mGeoDataClient = Places.getGeoDataClient(this, null);
@@ -190,23 +161,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         markers=new ArrayList<>();
-//        searchButton=(Button) findViewById(R.id.advanceSearch);
-//        searchButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                advanceSearchClick(searchButton);
-//            }
-//        });
 
-        //places searched
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(this);
-
-        //Obtain the SupportMapFragment and get notified when the map is ready to be used.
-
-        //acceleration
-        //textView=(TextView)findViewById(R.id.textView);
 
         startButton =(Button)findViewById(R.id.startbutton);
         SM = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
@@ -232,9 +190,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
         //firebase
         mRootReference = firebaseDatabase.getReference().child("Location");
-        //mRootReference.removeValue();
-
-
     }
 
     @Override
@@ -276,7 +231,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    //
     private void showCurrentPlace() {
         if (mMap == null) {
             return;
@@ -380,6 +334,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .setItems(mLikelyPlaceNames, listener)
                 .show();
     }
+
     private void updateLocationUI() {
         if (mMap == null) {
             return;
@@ -565,25 +520,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    public float dist(LatLng start,LatLng end){
-        Location startLoc=new Location("start location");
-        Location endLoc=new Location("end location");
 
-        startLoc.setLatitude(start.latitude);
-        endLoc.setLatitude(end.latitude);
-        startLoc.setLongitude(start.longitude);
-        endLoc.setLongitude(end.longitude);
-        float dist=startLoc.distanceTo(endLoc);
-        return dist;
-    }
-
-    public void alarm(LatLng pHole){
-        if(dist(mLastKnownLatlang,pHole)<=5){
+    public void alarm(){
             mp.start();
-        }
-        else{
-            if(mp.isPlaying())mp.release();
-        }
+
+
     }
     protected void onSaveInstanceState(Bundle outState) {
         if (mMap != null) {
@@ -617,7 +558,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return true;
     }
 
-    //
     private void getDeviceLocation() {
     /*
      * Get the best and most recent location of the device, which may be null in rare
@@ -650,7 +590,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    //
     public void getLocationPermission() {
     /*
      * Request location permission, so that we can get the location of the
@@ -744,31 +683,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mRootReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String value=dataSnapshot.getValue().toString();
-                //textView.setText(value);
-
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
         });
     }
-//     public  void advanceSearchClick(View view){
-//         Intent i=new Intent(this,SearchActivity.class);
-//         startActivity(i);
-//     }
-    public boolean checkCurrentLocationIfPHisAhead(){
-        for(int i=0;i<pHLatlng.size()-1;i++){
+    boolean holeIsClose(){
+        boolean isclose=false;
+        for(int i=0;i<pHLatlng.size();i++){
+            Location phLoc=new Location("phlocation");
+            phLoc.setLatitude(pHLatlng.get(i).latitude);
+            phLoc.setLongitude(pHLatlng.get(i).longitude);
+            Log.d("distance to", ""+mLastKnownLocation.distanceTo(phLoc));
+            if(mLastKnownLocation.distanceTo(phLoc)<=10) {
+                isclose=true;
+                break;
+            }
 
         }
-        return true;
+        return isclose;
     }
-//    @Override
-////    public void onPause() {
-////        super.onPause();
-////        timerHandler.removeCallbacks(timerRunnable);
-////    }
 
 }
