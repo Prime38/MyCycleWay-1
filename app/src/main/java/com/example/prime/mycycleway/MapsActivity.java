@@ -133,6 +133,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                    mp.release();
 //                }
                 alarm();
+
             }
             timerHandler.postDelayed(this, 2000);
         }
